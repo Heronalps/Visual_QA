@@ -6,6 +6,11 @@ from vqa_vocabulary import *
 import argparse
 import sys
 
+from vqa_cnn import *
+
+
+
+
 def loadGlove(embeddingFile):
     vocab = []
     embedding = []
@@ -57,11 +62,16 @@ def parse_args(args):
     # nnArgs.add_argument('--embeddingSize', type=int, default=64, help='embedding size of the word representation')
     # nnArgs.add_argument('--embeddingSource', type=str, default="GoogleNews-vectors-negative300.bin", help='embedding file to use for the word representation')
 
+    ## cnn options
+    cnnArgs = parser.add_argument_group('CNN options')
+    cnnArgs.add_argument('--cnn',type=str,default='vgg16',help='vgg model to be loaded')
+    cnnArgs.add_argument('--cnn_pretrained_file',type=str,default='./vgg16_weights.npz',help='pretrained vgg model')
+    cnnArgs.add_argument('--train_cnn',type=bool,default=False,help='To update the weights of CNN using training')
     # Training options
     trainingArgs = parser.add_argument_group('Training options')
     trainingArgs.add_argument('--numEpochs', type=int, default=30, help='maximum number of epochs to run')
     trainingArgs.add_argument('--saveEvery', type=int, default=2000, help='nb of mini-batch step before creating a model checkpoint')
-    trainingArgs.add_argument('--batch_size', type=int, default=256, help='mini-batch size')
+    trainingArgs.add_argument('--batch_size', type=int, default=1, help='mini-batch size')
     trainingArgs.add_argument('--learningRate', type=float, default=0.002, help='Learning rate')
     trainingArgs.add_argument('--dropout', type=float, default=0.9, help='Dropout rate (keep probabilities)')
 
@@ -83,6 +93,11 @@ def assign_args(args):
     config.MAX_QUESTION_LENGTH=args.max_question_length
     config.MAX_ANSWER_LENGTH = args.max_answer_length
     config.BATCH_SIZE = args.batch_size
+
+    ## CNN
+    config.CNN = args.cnn
+    config.CNN_PRETRAINED_FILE = args.cnn_pretrained_file
+    config.TRAIN_CNN = args.train_cnn
     return config
 
 if __name__ == "__main__":
@@ -90,11 +105,23 @@ if __name__ == "__main__":
     ## Parse the input arguments
     parsed_args = parse_args(args)
     ## assign input arguments to the config object
+
     config = assign_args(parsed_args)
-    print(config.BATCH_SIZE)
-    vocab,embedding,dictionary,reverseDictionary = loadGlove(config.GLOVE_EMBEDDING_FILE)
-    data_set = prepare_train_data(config,vocab,dictionary)
-    # for j in range(10):
-    #     print(data_set.next_batch())
+
+    # vocab,embedding,dictionary,reverseDictionary = loadGlove(config.GLOVE_EMBEDDING_FILE)
+    # data_set = prepare_train_data(config,vocab,dictionary)
+
+    sess = tf.Session()
+
+    model = vqa_cnn(config)
+    # model.build()
+    # model.load_cnn(sess,config.CNN_PRETRAINED_FILE)
+    #model.tensorflow_resnet_model(config)
+    model.test_cnn(sess)
+
+
+
+
+
 
 
