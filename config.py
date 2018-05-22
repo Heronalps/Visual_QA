@@ -14,17 +14,22 @@ class Config(object):
         ## CNN parameters
         self.TRAIN_CNN = False
         self.CNN='vgg16'
-        self.CNN_PRETRAINED_FILE='./vgg16_weights.npz'
+        self.CNN_PRETRAINED_FILE = self.DATA_DIR +'./vgg16_weights.npz'
+
         # self.CNN = 'resnet50'
         # self.CNN_PRETRAINED_FILE = './resnet50_no_fc.npy'
 
         ## PARAMETERS
         self.MAX_QUESTION_LENGTH = 25
-        self.MAX_ANSWER_LENGTH = 25
+        self.MAX_ANSWER_LENGTH = 1
         self.BATCH_SIZE = 10
+        self.TOP_ANSWERS = 1000
+        self.ONLY_TOP_ANSWERS = True ## If we are considering only questions with top answers in our model
 
         self.PHASE = 'train'
-
+        self.POINT_WISE_FEATURES = 1024
+        self.OUTPUT_SIZE = self.TOP_ANSWERS
+        self.INITIAL_LEARNING_RATE = 1e-4
 
         # about the weight initialization and regularization
         self.fc_kernel_initializer_scale = 0.08

@@ -65,7 +65,7 @@ def parse_args(args):
     ## cnn options
     cnnArgs = parser.add_argument_group('CNN options')
     cnnArgs.add_argument('--cnn',type=str,default='vgg16',help='vgg model to be loaded')
-    cnnArgs.add_argument('--cnn_pretrained_file',type=str,default='./vgg16_weights.npz',help='pretrained vgg model')
+    cnnArgs.add_argument('--cnn_pretrained_file',type=str,default='./datasets/vgg16_weights.npz',help='pretrained vgg model')
     cnnArgs.add_argument('--train_cnn',type=bool,default=False,help='To update the weights of CNN using training')
     # Training options
     trainingArgs = parser.add_argument_group('Training options')
@@ -76,7 +76,7 @@ def parse_args(args):
     trainingArgs.add_argument('--dropout', type=float, default=0.9, help='Dropout rate (keep probabilities)')
 
     trainingArgs.add_argument('--max_question_length', type=int, default=25, help='maximum question length')
-    trainingArgs.add_argument('--max_answer_length', type=int, default=25, help='maximum answer length')
+    trainingArgs.add_argument('--max_answer_length', type=int, default=1, help='maximum answer length')
 
 
 
@@ -101,23 +101,28 @@ def assign_args(args):
     return config
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    ## Parse the input arguments
-    parsed_args = parse_args(args)
-    ## assign input arguments to the config object
+    # ## Use the arguments from the command line in the fina model
+    # args = sys.argv[1:]
+    # ## Parse the input arguments
+    # parsed_args = parse_args(args)
+    #
+    # ## assign input arguments to the config object
+    # config = assign_args(parsed_args)
 
-    config = assign_args(parsed_args)
+    config = Config()
 
-    # vocab,embedding,dictionary,reverseDictionary = loadGlove(config.GLOVE_EMBEDDING_FILE)
-    # data_set = prepare_train_data(config,vocab,dictionary)
+    vocab,embedding,dictionary,reverseDictionary = loadGlove(config.GLOVE_EMBEDDING_FILE)
+    data_set = prepare_train_data(config,vocab,dictionary)
 
-    sess = tf.Session()
+    for i in range(100):
+        print(data_set.answer_idxs_list[i],data_set.answer_masks_list[i])
 
-    model = vqa_cnn(config)
+
+    # sess = tf.Session()
+    #
+    # model = vqa_cnn(config)
     # model.build()
     # model.load_cnn(sess,config.CNN_PRETRAINED_FILE)
-    #model.tensorflow_resnet_model(config)
-    model.test_cnn(sess)
 
 
 
