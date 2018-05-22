@@ -1,5 +1,5 @@
 ## converts words to indexes for questions and answer indexes to words
-## tokenizer moodel is also present here.
+## tokenizer model is also present here.
 import os
 import numpy as np
 import pandas as pd

@@ -72,7 +72,7 @@ class DataSet(object):
             answer_idxs = self.answer_idxs_list[current_idxs]
             answer_masks = self.answer_masks_list[current_idxs]
             self.current_idx += self.batch_size
-            return image_files, question_idxs, question_masks,answer_idxs,answer_masks
+            return image_files, question_idxs, question_masks, answer_idxs, answer_masks
         else:
             self.current_idx += self.batch_size
             return image_files,question_idxs,question_masks

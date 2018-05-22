@@ -6,7 +6,7 @@
 Preporcessing contains following steps
 1. Remove unnecessary words
 2. Load the glove
-3.convert the words to indices in the vocabulary
+3. Convert the words to indices in the vocabulary
 4. Mask to the maximum length.
 """
 
