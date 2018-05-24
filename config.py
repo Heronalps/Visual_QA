@@ -31,6 +31,16 @@ class Config(object):
         self.OUTPUT_SIZE = self.TOP_ANSWERS
         self.INITIAL_LEARNING_RATE = 1e-4
 
+        ## LSTM parameters
+        self.LSTM_BATCH_SIZE = 32
+        self.LSTM_STEPS = 25
+        self.LSTM_CELL_SIZE = 512
+        self.LSTM_LEARN_RATE = 0.006
+        self.LSTM_INPUT_SIZE = 32
+        self.LSTM_OUTPUT_SIZE = 1024
+
+
+
         # about the weight initialization and regularization
         self.fc_kernel_initializer_scale = 0.08
         self.fc_kernel_regularizer_scale = 1e-4
@@ -40,3 +50,4 @@ class Config(object):
         self.fc_drop_rate = 0.5
         self.lstm_drop_rate = 0.3
         self.attention_loss_factor = 0.01
+

@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from vqa_preprocessing import  *
+from vqa_lstm import *
 from config import *
 from vqa_vocabulary import *
 import argparse
@@ -118,11 +119,16 @@ if __name__ == "__main__":
         print(data_set.answer_idxs_list[i],data_set.answer_masks_list[i])
 
 
-    # sess = tf.Session()
-    #
-    # model = vqa_cnn(config)
-    # model.build()
-    # model.load_cnn(sess,config.CNN_PRETRAINED_FILE)
+    sess = tf.Session()
+
+    model = vqa_cnn(config)
+    model.build()
+    model.load_cnn(sess,config.CNN_PRETRAINED_FILE)
+
+    lstm = vqa_lstm(config)
+    lstm.encode(data_set)
+
+
 
 
 
