@@ -10,7 +10,8 @@ import sys
 from vqa_cnn import *
 
 
-
+from vqa_model import *
+from vqa_preprocessing import *
 
 def parse_args(args):
     """
@@ -90,25 +91,28 @@ if __name__ == "__main__":
     # ## assign input arguments to the config object
     # config = assign_args(parsed_args)
 
+    ## Make the session
+    sess = tf.Session()
+    ## Create a config object
     config = Config()
 
+    ## Run the glove
     vocab,embedding,dictionary,reverseDictionary = loadGlove(config.GLOVE_EMBEDDING_FILE)
-
+    ## Create the data set
 
     data_set = prepare_train_data(config,vocab,dictionary)
 
-    for i in range(100):
-        print(data_set.answer_idxs_list[i],data_set.answer_masks_list[i])
+    # for i in range(100):
+    #     print(data_set.answer_idxs_list[i],data_set.answer_masks_list[i])
 
-
-    sess = tf.Session()
-
-    model = vqa_cnn(config)
+    # Create the model object
+    model = vqa_model(config)
+    # Build the model
     model.build()
-    model.load_cnn(sess,config.CNN_PRETRAINED_FILE)
+    # Train the data with the data set and embedding matrix
+    model.train(sess,data_set,embedding)
 
-    lstm = vqa_lstm(config)
-    lstm.encode(data_set)
+
 
 
 

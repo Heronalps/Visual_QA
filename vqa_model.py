@@ -26,17 +26,34 @@ class vqa_model:
         self.questions =tf.placeholder(
             dtype=tf.float32,
             shape=[self.config.BATCH_SIZE] + [self.config.MAX_QUESTION_LENGTH]+[self.config.EMBEDDING_DIMENSION])
+        self.question_masks = tf.placeholder(
+            dtype=tf.float32,
+            shape=[self.config.BATCH_SIZE] + [self.config.MAX_QUESTION_LENGTH] + [self.config.EMBEDDING_DIMENSION])
 
-        self.encoder.build(self.images,self.questions)
-        self.decoder.build(self.encoder.cnn_features,self.encoder.rnn_features)
+
+        self.embedding_matrix_placeholder = tf.placeholder(tf.float32, shape=[self.config.VOCAB_SIZE, self.config.EMBEDDING_DIMENSION])
+
+        self.embedding_matrix = tf.Variable(tf.constant(0.0, shape=[self.config.VOCAB_SIZE, self.config.EMBEDDING_DIMENSION]),
+                        trainable=False, name="embedding_matrix")
+
+        ## pass the images, questions and embedding matrix to the encoder
+        self.encoder.build(self.images,self.questions,self.question_masks, self.embedding_matrix)
+        ## pass the outputs of encoder to decoder model
+        self.decoder.build(self.encoder.cnn_features,self.encoder.lstm_features)
+
         self.build_model()
 
     def build_model(self):
         ## Assign variables that needs to be passed to variables from encoder and decoder
         pass
 
-    def train(self,sess,train_data):
+    def train(self,sess,train_data,embedding_matrix_glove):
         print("Training the model")
+
+        ## Assign embedding matrix to the variable in session
+        self.embedding_init = self.embedding_matrix.assign(self.embedding_matrix_placeholder)
+
+        sess.run(self.embedding_init, feed_dict={self.embedding_matrix_placeholder: embedding_matrix_glove})
 
         for _ in tqdm(list(range(self.config.NUM_EPOCHS)), desc='epoch'):
             #for _ in tqdm(list(range(train_data.num_batches)), desc='batch'):

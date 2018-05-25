@@ -42,6 +42,7 @@ class Config(object):
         self.NUM_EPOCHS = 1
         self.NUM_BATCHES = 20 ## Just a place holder, so it doesn't loop through all the data.
 
+
         ## LSTM parameters
         self.LSTM_BATCH_SIZE = 32
         self.LSTM_STEPS = 25
