@@ -2,16 +2,18 @@ import tensorflow as tf
 import numpy as np
 
 class vqa_decoder:
-    def __init__(self,config,image_features,question_features):
+    def __init__(self,config):
         self.config =  config
+        print("decoder model created")
+
+
+    def build(self,image_features,question_features):
+
+        print("Building Decoder")
+        config = self.config
+        self.is_train = config.PHASE
         self.image_features = image_features
         self.question_features = question_features
-
-    def build_decoder(self):
-        ## Point wise multiplication
-        ## Check if both the shapes are matching
-        config = self.config
-        self.is_train = True
 
         # Setup the placeholders
         if self.is_train:
@@ -23,6 +25,7 @@ class vqa_decoder:
                 dtype=tf.float32,
                 shape=[config.BATCH_SIZE, config.MAX_ANSWER_LENGTH])
 
+        ## Check if both the shapes are matching
         if(tf.shape(self.image_features)[1] == config.POINT_WISE_FEATURES and
            tf.shape(self.question_features)[1] == config.POINT_WISE_FEATURES):
             self.point_wise = tf.multiply(self.image_features,self.question_features)
@@ -31,12 +34,11 @@ class vqa_decoder:
             ## Reshape them into correct shape
             self.image_features = tf.reshape(self.image_features,[config.BATCH_SIZE,config.POINT_WISE_FEATURES])
             self.question_features = tf.reshape(self.question_features,[config.BATCH_SIZE,config.POINT_WISE_FEATURES])
-
             self.point_wise = tf.multiply(self.image_features,self.question_features)
 
 
         ## Build a Fully Connected Layer
-        with tf.variable_scope('fc', reuse=tf.AUTO_REUSE) as scope:
+        with tf.variable_scope('fc_decoder', reuse=tf.AUTO_REUSE) as scope:
             fcw = tf.get_variable(initializer=tf.truncated_normal([self.config.POINT_WISE_FEATURES, self.config.OUTPUT_SIZE],
                                                    dtype=tf.float32,
                                                    stddev=1e-1), name='fc_W',trainable=True)
@@ -48,12 +50,13 @@ class vqa_decoder:
         if self.is_train:
             # Compute the loss for this step, if necessary
             cross_entropy_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                labels=self.onehot_encode(self.onehot_encode(self.answers[:,0])),
+                labels=self.onehot_encode(self.onehot_encode(self.answers[:,0])), ##[:,0] because answers is array of arrays
                 logits=logits)
 
             self.optimizer = tf.train.AdamOptimizer(config.INITIAL_LEARNING_RATE).minimize(cross_entropy_loss)
 
         self.predictions = tf.argmax(logits, 1)
+        print(" Decoder model built")
 
 
     def onehot_encode(self,answers):
