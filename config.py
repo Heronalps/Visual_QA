@@ -9,7 +9,7 @@ class Config(object):
         self.VAL_QUESTIONS_FILE='v2_OpenEnded_mscoco_val2014_questions.json'
         self.VAL_ANNOTATIONS_FILE='v2_mscoco_val2014_annotations.json'
 
-        self.GLOVE_EMBEDDING_FILE='/Users/sainikhilmaram/Desktop/OneDrive/UCSB courses/Spring_2018/click-bait/Multimodal-Clickbait-Detection/glove.6B.100d.txt'
+        self.GLOVE_EMBEDDING_FILE='./datasets/glove.6B.100d.txt'
 
         ## CNN parameters
         self.TRAIN_CNN = False
@@ -23,6 +23,7 @@ class Config(object):
         ## RNN PARAMETERS
         self.MAX_QUESTION_LENGTH = 25
         self.EMBEDDING_DIMENSION = 100
+        self.VOCAB_SIZE = 40000
 
 
 
@@ -45,7 +46,6 @@ class Config(object):
         self.LSTM_BATCH_SIZE = 32
         self.LSTM_STEPS = 25
         self.LSTM_CELL_SIZE = 512
-        self.LSTM_LEARN_RATE = 0.006
         self.LSTM_INPUT_SIZE = 32
         self.LSTM_OUTPUT_SIZE = 1024
 

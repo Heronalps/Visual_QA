@@ -213,7 +213,6 @@ def prepare_train_data(config,words,word2idx):
     #print(image_id_list,question_id_list,question_idxs_list,answer_idxs_list)
 
 
-
     print("Number of Questions = %d" %(train_size))
     print("Missing words : ", vocabulary.missingWords)
     print("Building the dataset...")
@@ -232,3 +231,24 @@ def prepare_train_data(config,words,word2idx):
                       True)
     print("Dataset built.")
     return dataset
+
+
+def loadGlove(embeddingFile):
+    vocab = []
+    embedding = []
+    dictionary = {}
+    reverseDictionary = {}
+    count = 0
+    print("Loading Glove")
+    file = open(embeddingFile, 'r')
+    for line in file.readlines():
+        row = line.strip().split(' ')
+        vocab.append(row[0])
+        embedding.append(row[1:])
+        dictionary[row[0]] = count
+        reverseDictionary[count] = row[0]
+        count = count + 1
+    print('Loaded GloVe!')
+    file.close()
+    print(len(vocab))
+    return vocab, embedding, dictionary, reverseDictionary

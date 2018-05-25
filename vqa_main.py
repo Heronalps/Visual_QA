@@ -12,26 +12,6 @@ from vqa_cnn import *
 
 
 
-def loadGlove(embeddingFile):
-    vocab = []
-    embedding = []
-    dictionary = {}
-    reverseDictionary = {}
-    count = 0
-    print("Loading Glove")
-    file = open(embeddingFile, 'r')
-    for line in file.readlines():
-        row = line.strip().split(' ')
-        vocab.append(row[0])
-        embedding.append(row[1:])
-        dictionary[row[0]] = count
-        reverseDictionary[count] = row[0]
-        count = count + 1
-    print('Loaded GloVe!')
-    file.close()
-    print(len(vocab))
-    return vocab, embedding,dictionary,reverseDictionary
-
 def parse_args(args):
     """
     Parse the arguments from the given command line
@@ -113,6 +93,8 @@ if __name__ == "__main__":
     config = Config()
 
     vocab,embedding,dictionary,reverseDictionary = loadGlove(config.GLOVE_EMBEDDING_FILE)
+
+
     data_set = prepare_train_data(config,vocab,dictionary)
 
     for i in range(100):
