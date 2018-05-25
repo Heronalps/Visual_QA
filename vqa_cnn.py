@@ -134,12 +134,12 @@ class vqa_cnn():
     def __init__(self,config):
         self.config = config
         self.nn = NN(config)
-        self.image_shape = [224, 224, 3]
-        print("model_created")
+        self.image_shape = self.config.IMAGE_SHAPE
+        print("cnn_model_created")
 
-    def build(self):
+    def build(self,images):
         """ Build the model. """
-        self.build_cnn()
+        self.build_cnn(images)
 
     def build_cnn(self,images):
         """ Build the CNN. """
@@ -379,11 +379,12 @@ class vqa_cnn():
         # self.conv_feats = self.fc2
         ## Reshaping the 4096 to fit the lstm size
         reshaped_fc2_feats = tf.reshape(self.fc2,
-                                        [config.BATCH_SIZE, 8, 512])
-        self.num_ctx = 8
-        self.dim_ctx = 512
+                                        [config.BATCH_SIZE, 2, 2048])
+
+        self.conv_feats = tf.reduce_mean(reshaped_fc2_feats, axis=1)
+        self.num_ctx = 1
+        self.dim_ctx = 2048
         self.images = images
-        self.conv_feats = reshaped_fc2_feats
 
     def build_resnet50(self,images):
         """ Build the ResNet50. """
@@ -427,7 +428,7 @@ class vqa_cnn():
 
         ## Reducing into 20148
         self.conv_feats = tf.reduce_mean(reshaped_res5c_feats, axis=1)
-        self.num_ctx = 49
+        self.num_ctx = 1
         self.dim_ctx = 2048
         self.images = images
 
