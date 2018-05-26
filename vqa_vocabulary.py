@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import string
+import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import re
@@ -62,6 +63,8 @@ class Vocabulary(object):
         self.words = words
         self.word2idx = word2idx
         self.missingWords = 0
+        nltk.download('stopwords')
+        nltk.download('punkt')
 
     def process_sentence(self, sentence):
         """ Tokenize a sentence, and translate each token into its index
