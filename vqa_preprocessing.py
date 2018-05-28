@@ -28,6 +28,7 @@ class ImageLoader(object):
     def load_image(self, image_file):
         """ Load and preprocess an image. """
         image = cv2.imread(image_file)
+        # print("Image file path : {}".format(image_file))
 
         if self.bgr:
             temp = image.swapaxes(0, 2)
@@ -92,10 +93,13 @@ def get_best_confidence_answer(answer_list):
 
 def get_top_answers(config):
     """TO get the top answers as we are classifying the answers into one of top 1000"""
+    print("Getting Top Answers ......")
     counts = {}
     train_annot = json.load(open(config.DATA_DIR + config.TRAIN_ANNOTATIONS_FILE, 'r'))
     train_size = len(train_annot['annotations'])
-    for i in tqdm(list(range(train_size)), desc='Answers'):
+    #for i in tqdm(list(range(train_size)), desc='Answers'):
+
+    for i in range(train_size):
         ## Get the top 1000 best confidence answers
         answer, answer_id = get_best_confidence_answer(train_annot['annotations'][i]['answers'])
         counts[answer] =counts.get(answer,0) + 1
@@ -120,7 +124,11 @@ def get_top_answers(config):
 
 def prepare_train_data(config,words,word2idx):
     """ Prepare the data for training the model. """
-    print("Loading the training json files")
+    print("Preparing Training Data...")
+    top_answers = get_top_answers(config)
+    answer_to_idx = {ans: idx for idx, ans in enumerate(top_answers)}
+    idx_to_answer = {idx: ans for idx, ans in enumerate(top_answers)}
+
     train_annot = json.load(open(config.DATA_DIR + config.TRAIN_ANNOTATIONS_FILE, 'r'))
     train_ques = json.load(open(config.DATA_DIR + config.TRAIN_QUESTIONS_FILE, 'r'))
 
@@ -132,18 +140,14 @@ def prepare_train_data(config,words,word2idx):
     question_id_list = [] ; question_idxs_list = [] ; question_masks_list = [] ; question_type_list = []
     answer_id_list = []  ; answer_idxs_list = [] ; answer_masks_list = [] ; answer_type_list = []
 
-    print("Preparing Training Data...")
 
-    top_answers = get_top_answers(config)
-    answer_to_idx = {ans:idx for idx,ans in enumerate(top_answers)}
-    idx_to_answer = {idx:ans for idx,ans in enumerate(top_answers)}
 
     for i in tqdm(list(range(train_size)), desc='training data'):
         ## Attributes required from questions
         question_id = train_ques['questions'][i]['question_id']
         image_id    = train_ques['questions'][i]['image_id']
         question    = train_ques['questions'][i]['question']
-        image_file  = os.path.join(config.TRAIN_IMAGE_DIR,str(image_id))
+        image_file  = os.path.join(config.TRAIN_IMAGE_DIR,"COCO_train2014_000000"+format(image_id,'06d')+".jpg")
 
         ## Attributes required from annotations
         question_type = train_annot['annotations'][i]['question_type']
@@ -206,18 +210,14 @@ def prepare_train_data(config,words,word2idx):
             answer_masks[:answer_num_words] = 1
 
             ## Place the elements into their list
-            image_id_list.append(image_id);
+            image_id_list.append(image_id)
             image_file_list.append(image_file)
 
-            question_id_list.append(question_id);
-            question_idxs_list.append(question_idxs)
-            question_masks_list.append(question_masks);
-            question_type_list.append(question_type)
+            question_id_list.append(question_id); question_idxs_list.append(question_idxs)
+            question_masks_list.append(question_masks); question_type_list.append(question_type)
 
-            answer_id_list.append(answer_id);
-            answer_idxs_list.append(answer_idxs)
-            answer_masks_list.append(answer_masks);
-            answer_type_list.append(answer_type)
+            answer_id_list.append(answer_id); answer_idxs_list.append(answer_idxs)
+            answer_masks_list.append(answer_masks); answer_type_list.append(answer_type)
 
 
     image_id_list = np.array(image_id_list) ; image_file_list = np.array(image_file_list)
@@ -247,26 +247,5 @@ def prepare_train_data(config,words,word2idx):
                       config.BATCH_SIZE,
                       True,
                       True)
-    print("Dataset built.")
+    print("Training Data prepared")
     return dataset
-
-
-def loadGlove(embeddingFile):
-    vocab = []
-    embedding = []
-    dictionary = {}
-    reverseDictionary = {}
-    count = 0
-    print("Loading Glove")
-    file = open(embeddingFile, 'r')
-    for line in file.readlines():
-        row = line.strip().split(' ')
-        vocab.append(row[0])
-        embedding.append(row[1:])
-        dictionary[row[0]] = count
-        reverseDictionary[count] = row[0]
-        count = count + 1
-    print('Loaded GloVe!')
-    file.close()
-    print(len(vocab))
-    return vocab, embedding, dictionary, reverseDictionary

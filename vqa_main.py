@@ -94,22 +94,30 @@ if __name__ == "__main__":
     ## Make the session
     sess = tf.Session()
     ## Create a config object
+    print("Building the configuration object")
     config = Config()
+
 
     ## Run the glove
     vocab,embedding,dictionary,reverseDictionary = loadGlove(config.GLOVE_EMBEDDING_FILE)
     ## Create the data set
 
+
     data_set = prepare_train_data(config,vocab,dictionary)
+    print("Training Data prepared")
 
     # for i in range(100):
     #     print(data_set.answer_idxs_list[i],data_set.answer_masks_list[i])
 
     # Create the model object
+    print("Crearing the Model")
     model = vqa_model(config)
     # Build the model
+    print("Building the Model .....")
     model.build()
     # Train the data with the data set and embedding matrix
+    print("Training the Data")
+    sess.run(tf.global_variables_initializer())
     model.train(sess,data_set,embedding)
 
 

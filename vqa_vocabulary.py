@@ -72,7 +72,7 @@ class Vocabulary(object):
         words = tokenizing_sentence(sentence.lower())
         try:
 
-            word_idxs = [self.word2idx[w] for w in words]
+            word_idxs = [int(self.word2idx[w]) for w in words]
         except:
             self.missingWords = self.missingWords + 1
             word_idxs = []

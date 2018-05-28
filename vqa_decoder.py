@@ -21,20 +21,13 @@ class vqa_decoder:
             self.answers = tf.placeholder(
                 dtype=tf.int32,
                 shape=[config.BATCH_SIZE, config.MAX_ANSWER_LENGTH])
-            self.masks = tf.placeholder(
+            self.answer_masks = tf.placeholder(
                 dtype=tf.float32,
                 shape=[config.BATCH_SIZE, config.MAX_ANSWER_LENGTH])
 
-        ## Check if both the shapes are matching
-        if(tf.shape(self.image_features)[1] == config.POINT_WISE_FEATURES and
-           tf.shape(self.question_features)[1] == config.POINT_WISE_FEATURES):
-            self.point_wise = tf.multiply(self.image_features,self.question_features)
+        ## Point wise multiplication
 
-        else:
-            ## Reshape them into correct shape
-            self.image_features = tf.reshape(self.image_features,[config.BATCH_SIZE,config.POINT_WISE_FEATURES])
-            self.question_features = tf.reshape(self.question_features,[config.BATCH_SIZE,config.POINT_WISE_FEATURES])
-            self.point_wise = tf.multiply(self.image_features,self.question_features)
+        self.point_wise = tf.multiply(self.image_features,self.question_features)
 
 
         ## Build a Fully Connected Layer
@@ -49,8 +42,15 @@ class vqa_decoder:
 
         if self.is_train:
             # Compute the loss for this step, if necessary
+            # one_hot_encode_map = lambda x : self.onehot_encode(x)
+            # one_hot_encoded_answer = tf.map_fn(one_hot_encode_map,self.answers.values)
+            # cross_entropy_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            #     labels=self.onehot_encode(self.answers[:,0]), ##[:,0] because answers is array of arrays
+            #     logits=logits)
+            print("One hot encoding size : {}".format(tf.one_hot(self.answers[:,0], depth=self.config.TOP_ANSWERS).get_shape()))
+            print("Logits size : {}".format(logits.get_shape()))
             cross_entropy_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                labels=self.onehot_encode(self.onehot_encode(self.answers[:,0])), ##[:,0] because answers is array of arrays
+                labels=self.answers[:,0],  ##[:,0] because answers is array of arrays
                 logits=logits)
 
             self.optimizer = tf.train.AdamOptimizer(config.INITIAL_LEARNING_RATE).minimize(cross_entropy_loss)
@@ -59,10 +59,14 @@ class vqa_decoder:
         print(" Decoder model built")
 
 
-    def onehot_encode(self,answers):
-        onehot_vector = []
-        for ans in answers:
-            vector = np.zeros(self.config.TOP_ANSWERS)
-            vector[int(ans)] = 1
-            onehot_vector.append(vector)
-        return np.array(onehot_vector)
+    def onehot_encode(self,answer):
+        vector = np.zeros(self.config.TOP_ANSWERS)
+        vector[int(answer)] = 1
+        return vector
+    # def onehot_encode(self,answers):
+    #     onehot_vector = []
+    #     for ans in answers:
+    #         vector = np.zeros(self.config.TOP_ANSWERS)
+    #         vector[int(ans)] = 1
+    #         onehot_vector.append(vector)
+    #     return np.array(onehot_vector)
