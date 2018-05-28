@@ -57,7 +57,7 @@ def loadGlove(embeddingFile):
     dictionary = {}
     reverseDictionary = {}
     count = 0
-    print("Loading Glove")
+    print("Loading Glove.....")
     file = open(embeddingFile, 'r')
     for line in file.readlines():
         row = line.strip().split(' ')
@@ -66,7 +66,7 @@ def loadGlove(embeddingFile):
         dictionary[row[0]] = count
         reverseDictionary[count] = row[0]
         count = count + 1
-    print('Loaded GloVe!')
+    print('GloVe Loaded')
     file.close()
     print(len(vocab))
     return vocab, embedding,dictionary,reverseDictionary
@@ -124,7 +124,7 @@ def get_top_answers(config):
 
 def prepare_train_data(config,words,word2idx):
     """ Prepare the data for training the model. """
-    print("Preparing Training Data...")
+    print("Preparing Training Data....")
     top_answers = get_top_answers(config)
     answer_to_idx = {ans: idx for idx, ans in enumerate(top_answers)}
     idx_to_answer = {idx: ans for idx, ans in enumerate(top_answers)}
