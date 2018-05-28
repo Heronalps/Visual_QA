@@ -6,7 +6,7 @@ wget http://images.cocodataset.org/zips/test2015.zip
 
 jar xf train2014.zip
 jar xf val2014.zip
-jar test2015.zip
+jar xf test2015.zip
 
 pip3 install --upgrade pip
 
