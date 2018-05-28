@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # Train the data with the data set and embedding matrix
     print("Training the Data")
     sess.run(tf.global_variables_initializer())
-    model.train(sess,data_set,embedding)
+    model.train(sess, data_set, embedding)
 
 
 
