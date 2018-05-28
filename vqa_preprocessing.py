@@ -28,6 +28,7 @@ class ImageLoader(object):
     def load_image(self, image_file):
         """ Load and preprocess an image. """
         image = cv2.imread(image_file)
+        # print("Image file path : {}".format(image_file))
 
         if self.bgr:
             temp = image.swapaxes(0, 2)
@@ -146,7 +147,7 @@ def prepare_train_data(config,words,word2idx):
         question_id = train_ques['questions'][i]['question_id']
         image_id    = train_ques['questions'][i]['image_id']
         question    = train_ques['questions'][i]['question']
-        image_file  = os.path.join(config.TRAIN_IMAGE_DIR,str(image_id))
+        image_file  = os.path.join(config.TRAIN_IMAGE_DIR,"COCO_train2014_000000"+format(image_id,'06d')+".jpg")
 
         ## Attributes required from annotations
         question_type = train_annot['annotations'][i]['question_type']

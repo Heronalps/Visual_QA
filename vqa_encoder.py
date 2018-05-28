@@ -30,6 +30,7 @@ class vqa_encoder:
 
         ## Build a fully connected layer for CNN and LSTM to get 1024 features for each
         ## Get the features from CNN model
+        print("CNN feature size {}".format(self.cnn.conv_feats.get_shape()))
         with tf.variable_scope('fc_cnn_model', reuse=tf.AUTO_REUSE) as scope:
             fc_cnn_model_w = tf.get_variable(
                 initializer=tf.truncated_normal([self.cnn.dim_ctx, self.config.POINT_WISE_FEATURES],

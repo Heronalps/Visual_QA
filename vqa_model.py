@@ -22,13 +22,13 @@ class vqa_model:
         ## Place holder fo the images and questions and we pass them to the encoder
         self.images = tf.placeholder(
             dtype=tf.float32,
-            shape=[self.config.BATCH_SIZE] + self.config.image_shape)
+            shape=[self.config.BATCH_SIZE] + self.config.IMAGE_SHAPE)
         self.questions =tf.placeholder(
-            dtype=tf.float32,
-            shape=[self.config.BATCH_SIZE] + [self.config.MAX_QUESTION_LENGTH]+[self.config.EMBEDDING_DIMENSION])
+            dtype=tf.int32,
+            shape=[self.config.BATCH_SIZE] + [self.config.MAX_QUESTION_LENGTH])
         self.question_masks = tf.placeholder(
-            dtype=tf.float32,
-            shape=[self.config.BATCH_SIZE] + [self.config.MAX_QUESTION_LENGTH] + [self.config.EMBEDDING_DIMENSION])
+            dtype=tf.int32,
+            shape=[self.config.BATCH_SIZE] + [self.config.MAX_QUESTION_LENGTH])
 
 
         self.embedding_matrix_placeholder = tf.placeholder(tf.float32, shape=[self.config.VOCAB_SIZE, self.config.EMBEDDING_DIMENSION])

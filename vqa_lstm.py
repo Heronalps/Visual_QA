@@ -11,22 +11,28 @@ class vqa_lstm(object):
         self.output_size = config.LSTM_OUTPUT_SIZE
         self.cell_size = config.LSTM_CELL_SIZE
         self.batch_size = config.LSTM_BATCH_SIZE
-        self.lstm_layer = 2
+        self.lstm_layer = 1
         self.dim = self.lstm_layer * 1024
 
     def build(self, question_idxs, questions_mask, embedding_matrix):
 
+        print(" Shape of Question Tensor {}".format(question_idxs.get_shape()))
         word_embed = tf.nn.embedding_lookup(embedding_matrix, question_idxs)
-
+        print(" Shape of Word Tensor {}".format(word_embed.get_shape()))
         lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(self.cell_size)
-        lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(self.cell_size)
-        multi_lstm_cell = tf.contrib.rnn.MultiRNNCell(cells = [lstm_cell_1, lstm_cell_2])
+        #lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(self.cell_size)
+        #multi_lstm_cell = tf.contrib.rnn.MultiRNNCell(cells = [lstm_cell_1, lstm_cell_2])
 
         with tf.name_scope('initial_state'):
             self.cell_init_state = lstm_cell_1.zero_state(self.batch_size, dtype=tf.float32)
 
-        self.cell_outputs, self.cell_final_state = tf.nn.dynamic_rnn(
-            multi_lstm_cell, word_embed, initial_state=self.cell_init_state, time_major=False)
+        # self.cell_outputs, self.cell_final_state = tf.nn.dynamic_rnn(
+        #     multi_lstm_cell, word_embed, initial_state=self.cell_init_state, time_major=False)
 
-        self.lstm_features = tf.concat([self.cell_final_state[-1][0], self.cell_final_state[-1][1]], 0)
+        self.cell_outputs, self.cell_final_state = tf.nn.dynamic_rnn(
+            lstm_cell_1, word_embed, initial_state=self.cell_init_state, time_major=False)
+
+        print("LSTM final state size: 0 shape {0}, 1 shape {1}".format(self.cell_final_state[0].get_shape(),self.cell_final_state[1].get_shape()))
+        self.lstm_features = tf.concat([self.cell_final_state[0], self.cell_final_state[1]], 1)
+        print("LSTM Concat Feature size {}".format(self.lstm_features.get_shape()))
 
