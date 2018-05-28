@@ -60,6 +60,8 @@ def parse_args(args):
     trainingArgs.add_argument('--max_question_length', type=int, default=25, help='maximum question length')
     trainingArgs.add_argument('--max_answer_length', type=int, default=1, help='maximum answer length')
 
+    trainingArgs.add_argument('--epoch_count', type=int, default=0, help='starting epoch count')
+    trainingArgs.add_argument('--model_file', type=str, default='./models/epoch_1.npy', help='model load file')
 
 
     return parser.parse_args(args)
@@ -67,19 +69,24 @@ def parse_args(args):
 def assign_args(args):
     config = Config()
     ## Update config parameters with the ones passed from command line
-    config.DATA_DIR = args.data_dir
-    config.TRAIN_QUESTIONS_FILE = args.train_questions_file
-    config.TRAIN_ANNOTATIONS_FILE = args.train_annotations_file
-    config.VAL_QUESTIONS_FILE = args.val_questions_file
-    config.VAL_ANNOTATIONS_FILE = args.val_annotations_file
-    config.MAX_QUESTION_LENGTH=args.max_question_length
-    config.MAX_ANSWER_LENGTH = args.max_answer_length
-    config.BATCH_SIZE = args.batch_size
+    # config.DATA_DIR = args.data_dir
+    # config.TRAIN_QUESTIONS_FILE = args.train_questions_file
+    # config.TRAIN_ANNOTATIONS_FILE = args.train_annotations_file
+    # config.VAL_QUESTIONS_FILE = args.val_questions_file
+    # config.VAL_ANNOTATIONS_FILE = args.val_annotations_file
+    # config.MAX_QUESTION_LENGTH=args.max_question_length
+    # config.MAX_ANSWER_LENGTH = args.max_answer_length
+    # config.BATCH_SIZE = args.batch_size
+    #
+    # ## CNN
+    # config.CNN = args.cnn
+    # config.CNN_PRETRAINED_FILE = args.cnn_pretrained_file
+    # config.TRAIN_CNN = args.train_cnn
 
-    ## CNN
-    config.CNN = args.cnn
-    config.CNN_PRETRAINED_FILE = args.cnn_pretrained_file
-    config.TRAIN_CNN = args.train_cnn
+    config.EPOCH_COUNT = args.epoch_count
+    config.MODEL_FILE_NAME = args.model_file
+
+
     return config
 
 if __name__ == "__main__":
@@ -91,34 +98,30 @@ if __name__ == "__main__":
     # ## assign input arguments to the config object
     # config = assign_args(parsed_args)
 
-    ## Make the session
-    sess = tf.Session()
     ## Create a config object
     print("Building the configuration object")
     config = Config()
-
-
     ## Run the glove
     vocab,embedding,dictionary,reverseDictionary = loadGlove(config.GLOVE_EMBEDDING_FILE)
-    ## Create the data set
+
+    with tf.Session() as sess:
+        if config.PHASE == 'train':
+            ## Create the data set
+            data_set = prepare_train_data(config,vocab,dictionary)
+            # Create the model object
+            model = vqa_model(config)
+            # Build the model
+            model.build()
+            sess.run(tf.global_variables_initializer())
+            if (config.LOAD_MODEL):
+                model.load(sess,config.MODEL_FILE_NAME)
+            # Train the data with the data set and embedding matrix
+            model.train(sess,data_set,embedding)
 
 
-    data_set = prepare_train_data(config,vocab,dictionary)
-    print("Training Data prepared")
+        elif config.PHASE == 'test':
+            pass
 
-    # for i in range(100):
-    #     print(data_set.answer_idxs_list[i],data_set.answer_masks_list[i])
-
-    # Create the model object
-    print("Crearing the Model")
-    model = vqa_model(config)
-    # Build the model
-    print("Building the Model .....")
-    model.build()
-    # Train the data with the data set and embedding matrix
-    print("Training the Data")
-    sess.run(tf.global_variables_initializer())
-    model.train(sess, data_set, embedding)
 
 
 
