@@ -4,6 +4,8 @@ wget http://images.cocodataset.org/zips/train2014.zip
 wget http://images.cocodataset.org/zips/val2014.zip
 wget http://images.cocodataset.org/zips/test2015.zip
 
+sudo apt-get install default-jdk 
+
 jar xf train2014.zip
 jar xf val2014.zip
 jar xf test2015.zip
