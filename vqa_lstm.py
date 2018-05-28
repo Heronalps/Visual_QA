@@ -11,7 +11,7 @@ class vqa_lstm(object):
         self.output_size = config.LSTM_OUTPUT_SIZE
         self.cell_size = config.LSTM_CELL_SIZE
         self.batch_size = config.LSTM_BATCH_SIZE
-        self.lstm_layer = 1
+        self.lstm_layer = 2
         self.dim = self.lstm_layer * 1024
 
     def build(self, question_idxs, questions_mask, embedding_matrix):
