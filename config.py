@@ -4,7 +4,7 @@ class Config(object):
         self.DATA_DIR ='./datasets/'
         self.TRAIN_QUESTIONS_FILE='v2_OpenEnded_mscoco_train2014_questions.json'
         self.TRAIN_ANNOTATIONS_FILE='v2_mscoco_train2014_annotations.json'
-        self.TRAIN_IMAGE_DIR = './tmp/'
+        self.TRAIN_IMAGE_DIR = self.DATA_DIR + '/train2014/'
 
         self.VAL_QUESTIONS_FILE='v2_OpenEnded_mscoco_val2014_questions.json'
         self.VAL_ANNOTATIONS_FILE='v2_mscoco_val2014_annotations.json'
@@ -28,8 +28,9 @@ class Config(object):
 
 
         ## Decoder Parameters
-        self.OUTPUT_SIZE = self.TOP_ANSWERS
         self.TOP_ANSWERS = 1000
+        self.OUTPUT_SIZE = self.TOP_ANSWERS
+
         self.ONLY_TOP_ANSWERS = True ## If we are considering only questions with top answers in our model
         self.MAX_ANSWER_LENGTH = 1
 

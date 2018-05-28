@@ -61,10 +61,13 @@ class vqa_model:
                 batch = train_data.next_batch()
                 image_files, question_idxs, question_masks, answer_idxs, answer_masks = batch
                 images = self.image_loader.load_images(image_files)
+
                 feed_dict = {self.images:images,
                              self.questions:question_idxs,
+                             self.question_masks:question_masks,
                              self.decoder.answers:answer_idxs,
-                             self.decoder.masks:answer_masks}
+                             self.decoder.answer_masks:answer_masks}
+
                 _ = sess.run(self.decoder.optimizer,feed_dict=feed_dict)
 
 

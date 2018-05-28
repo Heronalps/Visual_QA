@@ -21,20 +21,13 @@ class vqa_decoder:
             self.answers = tf.placeholder(
                 dtype=tf.int32,
                 shape=[config.BATCH_SIZE, config.MAX_ANSWER_LENGTH])
-            self.masks = tf.placeholder(
+            self.answer_masks = tf.placeholder(
                 dtype=tf.float32,
                 shape=[config.BATCH_SIZE, config.MAX_ANSWER_LENGTH])
 
-        ## Check if both the shapes are matching
-        if(tf.shape(self.image_features)[1] == config.POINT_WISE_FEATURES and
-           tf.shape(self.question_features)[1] == config.POINT_WISE_FEATURES):
-            self.point_wise = tf.multiply(self.image_features,self.question_features)
+        ## Point wise multiplication
 
-        else:
-            ## Reshape them into correct shape
-            self.image_features = tf.reshape(self.image_features,[config.BATCH_SIZE,config.POINT_WISE_FEATURES])
-            self.question_features = tf.reshape(self.question_features,[config.BATCH_SIZE,config.POINT_WISE_FEATURES])
-            self.point_wise = tf.multiply(self.image_features,self.question_features)
+        self.point_wise = tf.multiply(self.image_features,self.question_features)
 
 
         ## Build a Fully Connected Layer
