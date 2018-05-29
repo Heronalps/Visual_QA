@@ -89,6 +89,7 @@ class vqa_model:
             print("Total Predictions correct : {0} at epoch {1}".format(total_predictions_correct,epoch_count))
             ## Save after all epochs
             self.save("epoch_"+str(epoch_count))
+            train_data.reset()
 
 
 
