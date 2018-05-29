@@ -59,9 +59,10 @@ class vqa_model:
 
         sess.run(self.embedding_init, feed_dict={self.embedding_matrix_placeholder: embedding_matrix_glove})
         epoch_count = self.config.EPOCH_COUNT
-        total_predictions_correct = 0
+
 
         for _ in tqdm(list(range(self.config.NUM_EPOCHS)), desc='epoch'):
+            total_predictions_correct = 0
             for _ in tqdm(list(range(train_data.num_batches)), desc='batch'):
             #for _ in tqdm(list(range(self.config.NUM_BATCHES)), desc='batch'):
                 batch = train_data.next_batch()
@@ -80,10 +81,12 @@ class vqa_model:
                 self.global_step += 1
                 total_predictions_correct += predictions_correct
 
-                if(self.global_step % self.config.SAVE_PERIOD == 0):
+                if(self.global_step % int(self.config.SAVE_PERIOD) == 0):
                     self.save("step_"+ str(self.global_step))
-                    print("Total Predictions correct : {}".format(total_predictions_correct))
+                    print("Total Predictions correct : {0} at time step {1}".format(total_predictions_correct,self.global_step))
+
             epoch_count += 1
+            print("Total Predictions correct : {0} at epoch {1}".format(total_predictions_correct,epoch_count))
             ## Save after all epochs
             self.save("epoch_"+str(epoch_count))
 
