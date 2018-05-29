@@ -5,7 +5,7 @@ class Config(object):
         self.TRAIN_QUESTIONS_FILE='v2_OpenEnded_mscoco_train2014_questions.json'
         self.TRAIN_ANNOTATIONS_FILE='v2_mscoco_train2014_annotations.json'
         self.TRAIN_IMAGE_DIR = self.DATA_DIR + '/train2014/'
-        self.TRAIN_IMAGE_DIR = '/Users/sainikhilmaram/Desktop/train2014'
+        #self.TRAIN_IMAGE_DIR = '/Users/sainikhilmaram/Desktop/train2014'
 
 
         self.VAL_QUESTIONS_FILE='v2_OpenEnded_mscoco_val2014_questions.json'
@@ -40,12 +40,12 @@ class Config(object):
         ## Model Parameters
         self.PHASE = 'train'
         self.POINT_WISE_FEATURES = 1024
-        self.BATCH_SIZE = 512
+        self.BATCH_SIZE = 128
         self.INITIAL_LEARNING_RATE = 1e-4
         self.NUM_EPOCHS = 5
         self.NUM_BATCHES = 2 ## Just a place holder, so it doesn't loop through all the data.
         self.SAVE_DIR = './models/'
-        self.SAVE_PERIOD = 200
+        self.SAVE_PERIOD = 370000/(self.BATCH_SIZE*4)
         self.LOAD_MODEL = False
         self.MODEL_FILE_NAME= self.SAVE_DIR + '/epoch_1.npy'
         self.EPOCH_COUNT = 0
