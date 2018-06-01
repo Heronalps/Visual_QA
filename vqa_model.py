@@ -17,16 +17,21 @@ class vqa_model:
         self.config = config
         self.encoder = vqa_encoder(self.config)
         self.decoder = vqa_decoder(self.config)
-        self.image_loader = ImageLoader('./ilsvrc_2012_mean.npy')
+        self.image_loader = ImageLoader( './ilsvrc_2012_mean.npy',self.config)
+        self.image_feature_loader = image_feature_loader(self.config)
         self.global_step = 0
 
     def build(self):
         ## Build the encoder and decoder models
         ## Place holder fo the images and questions and we pass them to the encoder
         print("Building the Model .....")
+
         self.images = tf.placeholder(
             dtype=tf.float32,
             shape=[self.config.BATCH_SIZE] + self.config.IMAGE_SHAPE)
+
+        self.image_features = tf.placeholder(dtype=tf.float32,
+                                             shape=[self.config.BATCH_SIZE] + [self.config.IMAGE_FEATURES_MAP])
         self.questions =tf.placeholder(
             dtype=tf.int32,
             shape=[self.config.BATCH_SIZE] + [self.config.MAX_QUESTION_LENGTH])
@@ -34,42 +39,47 @@ class vqa_model:
             dtype=tf.int32,
             shape=[self.config.BATCH_SIZE] + [self.config.MAX_QUESTION_LENGTH])
 
+        ## Initialise the embedding matrix
 
-        self.embedding_matrix_placeholder = tf.placeholder(tf.float32, shape=[self.config.VOCAB_SIZE, self.config.EMBEDDING_DIMENSION])
+        self.embedding_matrix = tf.get_variable(
+            name='weights',
+            shape=[self.config.VOCAB_SIZE, self.config.EMBEDDING_DIMENSION],
+            initializer=self.encoder.cnn.nn.fc_kernel_initializer,
+            regularizer=self.encoder.cnn.nn.fc_kernel_regularizer,
+            trainable=True)
 
-        self.embedding_matrix = tf.Variable(tf.constant(0.0, shape=[self.config.VOCAB_SIZE, self.config.EMBEDDING_DIMENSION]),
-                        trainable=False, name="embedding_matrix")
+        if self.config.PHASE == 'test':
+            ## pass the images, questions and embedding matrix to the encoder
+            self.encoder.build(self.images,self.questions,self.question_masks, self.embedding_matrix)
+        else:
+            ## pass the image features, questions and embedding matrix to the encoder
+            self.encoder.build(self.image_features, self.questions, self.question_masks, self.embedding_matrix)
 
-        ## pass the images, questions and embedding matrix to the encoder
-        self.encoder.build(self.images,self.questions,self.question_masks, self.embedding_matrix)
         ## pass the outputs of encoder to decoder model
         self.decoder.build(self.encoder.cnn_features,self.encoder.lstm_features)
-
+        self.image_feature_loader.build()
         self.build_model()
 
     def build_model(self):
         ## Assign variables that needs to be passed to variables from encoder and decoder
         pass
 
-    def train(self,sess,train_data,embedding_matrix_glove):
+    def train(self,sess,train_data):
         print("Training the model")
 
-        ## Assign embedding matrix to the variable in session
-        self.embedding_init = self.embedding_matrix.assign(self.embedding_matrix_placeholder)
-
-        sess.run(self.embedding_init, feed_dict={self.embedding_matrix_placeholder: embedding_matrix_glove})
         epoch_count = self.config.EPOCH_COUNT
-
 
         for _ in tqdm(list(range(self.config.NUM_EPOCHS)), desc='epoch'):
             total_predictions_correct = 0
             for _ in tqdm(list(range(train_data.num_batches)), desc='batch'):
             #for _ in tqdm(list(range(self.config.NUM_BATCHES)), desc='batch'):
                 batch = train_data.next_batch()
-                image_files, question_idxs, question_masks, answer_idxs, answer_masks = batch
-                images = self.image_loader.load_images(image_files)
+                image_files, image_idxs, question_idxs, question_masks, answer_idxs, answer_masks = batch
+                # images = self.image_loader.load_images(image_files)
+                image_features = self.image_feature_loader.load_images(image_idxs)
 
-                feed_dict = {self.images:images,
+                feed_dict = {self.image_features:image_features,
+                             # self.images:images,
                              self.questions:question_idxs,
                              self.question_masks:question_masks,
                              self.decoder.answers:answer_idxs,
@@ -82,16 +92,36 @@ class vqa_model:
                 total_predictions_correct += predictions_correct
 
                 if(self.global_step % int(self.config.SAVE_PERIOD) == 0):
-                    self.save("step_"+ str(self.global_step))
+                    #self.save("step_"+ str(self.global_step))
+                    f= open("results.txt",'a')
                     print("Total Predictions correct : {0} at time step {1}".format(total_predictions_correct,self.global_step))
+                    f.write("Total Predictions correct : {0} at time step {1}\n".format(total_predictions_correct,self.global_step))
+                    f.close()
 
             epoch_count += 1
             print("Total Predictions correct : {0} at epoch {1}".format(total_predictions_correct,epoch_count))
             ## Save after all epochs
             self.save("epoch_"+str(epoch_count))
+            f= open("results.txt",'a')
+            f.write("Total Predictions correct : {0} at epoch {1}\n".format(total_predictions_correct,epoch_count))
+            f.write("------------------------------------------------------------------------------\n")
+            f.close()
             train_data.reset()
 
 
+    def test(self,sess,test_data,top_answers):
+
+        batch = test_data.batch()
+        image_files, question_idxs, question_masks = batch
+        images = self.image_loader.load_images(image_files)
+
+        feed_dict = {self.images: images,
+                     self.questions: question_idxs,
+                     self.question_masks: question_masks
+                     }
+
+        predictions = sess.run(self.decoder.predictions,feed_dict = feed_dict)
+        print("Answer is {}".format(top_answers[predictions]))
 
     def save(self,file_name):
         """ Save the model. """
@@ -113,6 +143,8 @@ class vqa_model:
                 sess.run(v.assign(data_dict[v.name]))
                 count += 1
         print("%d tensors loaded." %count)
+
+
 
 
 

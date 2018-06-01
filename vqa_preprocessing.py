@@ -17,12 +17,14 @@ from vqa_vocabulary import Vocabulary
 from tqdm import tqdm
 from vqa_dataset import DataSet
 import cv2
+import pickle
 
 class ImageLoader(object):
-    def __init__(self, mean_file):
+    def __init__(self, mean_file,config):
         self.bgr = True
-        self.scale_shape = np.array([224, 224], np.int32)
-        self.crop_shape = np.array([224, 224], np.int32)
+        self.config = config
+        self.scale_shape = np.array(config.IMAGE_DIMENSION, np.int32)
+        self.crop_shape = np.array(config.IMAGE_DIMENSION, np.int32)
         self.mean = np.load(mean_file).mean(1).mean(1)
 
     def load_image(self, image_file):
@@ -71,9 +73,6 @@ def loadGlove(embeddingFile):
     print(len(vocab))
     return vocab, embedding,dictionary,reverseDictionary
 
-# val_annot = json.load(open(config.DATA_DIR+config.VALIDATION_ANNOTATION_FILE, 'r'))
-#
-# val_ques = json.load(open(config.DATA_DIR+config.VALIDATION_QUESTION_FILE, 'r'))
 
 def get_best_confidence_answer(answer_list):
     """Gives the best confidence answer from answer list"""
@@ -119,10 +118,15 @@ def get_top_answers(config):
     for i in range(config.TOP_ANSWERS):
         top_answers.append(count_words[i][1])
 
+    ## Save the top answers
+    print("Saving the top answers ....")
+    with open(config.DATA_DIR + config.TOP_ANSWERS_FILE, "wb") as fp:  # Pickling
+        pickle.dump(top_answers, fp)
+
     return top_answers
 
 
-def prepare_train_data(config,words,word2idx):
+def prepare_train_data(config,vocabulary):
     """ Prepare the data for training the model. """
     print("Preparing Training Data....")
     top_answers = get_top_answers(config)
@@ -133,7 +137,7 @@ def prepare_train_data(config,words,word2idx):
     train_ques = json.load(open(config.DATA_DIR + config.TRAIN_QUESTIONS_FILE, 'r'))
 
     train_size = len(train_annot['annotations'])
-    vocabulary = Vocabulary(words,word2idx)
+
 
     ## Lists that need to be passed to DataSet object
     image_id_list = [] ; image_file_list = []
@@ -164,8 +168,13 @@ def prepare_train_data(config,words,word2idx):
                 question_idxs = np.zeros(config.MAX_QUESTION_LENGTH,dtype = np.int32)
                 question_masks = np.zeros(config.MAX_QUESTION_LENGTH)
 
-                question_idxs[:question_num_words] = np.array(question_idxs_)
-                question_masks[:question_num_words] = 1
+                # ## Right padding
+                # question_idxs[:question_num_words] = np.array(question_idxs_)
+                # question_masks[:question_num_words] = 1
+
+                ## Left Padding
+                question_idxs[config.MAX_QUESTION_LENGTH - question_num_words:] = np.array(question_idxs_)
+                question_masks[config.MAX_QUESTION_LENGTH - question_num_words:] = 1
 
 
                 ## Convert the answer into answer indexes
@@ -245,7 +254,93 @@ def prepare_train_data(config,words,word2idx):
                       answer_masks_list,
                       answer_type_list,
                       config.BATCH_SIZE,
-                      True,
+                      config.PHASE,
                       True)
     print("Training Data prepared")
     return dataset
+
+
+def prepare_test_data(config,vocabulary):
+
+    question_id_list = []; question_idxs_list = []; question_masks_list = []
+
+
+    quest_file = config.DATA_DIR + config.TEST_QUESTION_FILE
+    qF = open(quest_file,'r')
+    question = qF.readline()
+    print(question)
+    question_idxs_ = vocabulary.process_sentence(question)
+    question_num_words = len(question_idxs_)
+
+    question_idxs = np.zeros(config.MAX_QUESTION_LENGTH, dtype=np.int32)
+    question_masks = np.zeros(config.MAX_QUESTION_LENGTH)
+
+    ## Left Padding
+    question_idxs[config.MAX_QUESTION_LENGTH - question_num_words:] = np.array(question_idxs_)
+    question_masks[config.MAX_QUESTION_LENGTH - question_num_words:] = 1
+
+    ## Get the Image Files, Currently we will have only one
+    files = os.listdir(config.TEST_IMAGE_DIR)
+    image_file_list = [os.path.join(config.TEST_IMAGE_DIR, f) for f in files
+                   if f.lower().endswith('.jpg') or f.lower().endswith('.jpeg')]
+
+    image_id_list = list(range(len(image_file_list)))
+
+
+    question_id_list.append(0)
+    question_idxs_list.append(question_idxs)
+    question_masks_list.append(question_masks)
+
+    dataset = DataSet(image_id_list,
+                      image_file_list,
+                      question_id_list,
+                      question_idxs_list,
+                      question_masks_list,
+                      batch_size=1,phase=config.PHASE)
+    print("Testing Data prepared")
+
+    ## Get the Top answers
+    with open(config.DATA_DIR + config.TOP_ANSWERS_FILE, "rb") as fp:  # Unpickling
+        top_answers = pickle.load(fp)
+
+    return dataset,top_answers
+
+
+def prepare_cnn_data(config):
+    files = os.listdir(config.TRAIN_IMAGE_DIR)
+    image_file_list = [os.path.join(config.TRAIN_IMAGE_DIR, f) for f in files
+                       if f.lower().endswith('.jpg') or f.lower().endswith('.jpeg')]
+
+    image_id_list = [f[:-4] for f in files]
+    dataset = DataSet(image_id_list,
+                      image_file_list,
+                      batch_size=config.BATCH_SIZE, phase=config.PHASE)
+    print("CNN Dataset prepared")
+
+    return dataset
+
+
+class image_feature_loader:
+    def __init__(self,config):
+        self.config = config
+
+    def build(self):
+        ## Loads the numpy file
+        self.image_features = np.load(self.config.DATA_DIR+self.config.FC_DATA_SET)
+
+
+    def load_image(self,image_id):
+        return self.image_features[()][image_id]
+
+    def load_images(self,image_ids):
+        images = []
+        for image_id in image_ids:
+            ## Formating the image id because this is the id used while storing it in numpy
+            image_id = "COCO_train2014_000000"+format(image_id,'06d')
+            images.append(self.load_image(image_id))
+        images = np.array(images,np.float32)
+        return images
+
+
+
+
