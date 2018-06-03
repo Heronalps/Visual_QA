@@ -36,7 +36,7 @@ class vqa_model_static_cnn:
         ## Assign variables that needs to be passed to variables from encoder and decoder
         pass
 
-    def train(self, sess, train_data):
+    def train(self, sess, train_data,fc_file_name,conv_file_name):
         print("Training the CNN model")
 
         epoch_count = self.config.EPOCH_COUNT
@@ -69,8 +69,8 @@ class vqa_model_static_cnn:
                 i = i + 1
 
 
-        np.save(self.config.DATA_DIR+ self.config.CONV_DATA_SET, self.conv_dict)
-        np.save(self.config.DATA_DIR+ self.config.FC_DATA_SET, self.fc_dict)
+        np.save(conv_file_name, self.conv_dict)
+        np.save(fc_file_name, self.fc_dict)
 
 
 

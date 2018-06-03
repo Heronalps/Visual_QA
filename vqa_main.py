@@ -108,13 +108,16 @@ if __name__ == "__main__":
 
     with tf.Session() as sess:
         if config.PHASE == 'train':
+            print("In training phase .....")
             ## Create Vocabulary object
-            vocabulary = Vocabulary()
+            vocabulary = Vocabulary(config)
             ## Build the vocabulary to get the indexes
             vocabulary.build(config.DATA_DIR+config.TRAIN_QUESTIONS_FILE)
             config.VOCAB_SIZE = vocabulary.num_words
             ## Create the data set
             data_set = prepare_train_data(config,vocabulary)
+            ## Create the evaluation data set
+            data_set_eval = prepare_eval_data(config,vocabulary)
             # Create the model object
             model = vqa_model(config)
             # Build the model
@@ -123,22 +126,29 @@ if __name__ == "__main__":
             if (config.LOAD_MODEL):
                 model.load(sess,config.MODEL_FILE_NAME)
             # Train the data with the data set and embedding matrix
-            model.train(sess,data_set)
+            model.train(sess,data_set,data_set_eval)
 
 
         elif config.PHASE=="cnn_features":
             ## Create the data set
             data_set = prepare_cnn_data(config)
-
             model = vqa_model_static_cnn(config)
             model.build()
             sess.run(tf.global_variables_initializer())
             ## Load Pre-trained CNN file
             model.cnn.load_cnn(sess, config.CNN_PRETRAINED_FILE)
-            model.train(sess,data_set)
+
+            # fc_file_name = config.DATA_DIR + config.FC_DATA_SET_TRAIN
+            # conv_file_name = config.DATA_DIR + config.CONV_DATA_SET_TRAIN
+
+            fc_file_name = config.DATA_DIR + config.FC_DATA_SET_EVAL
+            conv_file_name = config.DATA_DIR + config.CONV_DATA_SET_EVAL
+
+            model.train(sess,data_set,fc_file_name,conv_file_name)
 
 
         elif config.PHASE == 'test':
+            print("In Testing Phase .......")
             config.set_batch_size(1)
             print("Config.LSTM Size : {}".format(config.LSTM_BATCH_SIZE))
             ## Create Vocabulary object
@@ -152,10 +162,10 @@ if __name__ == "__main__":
             ## Build the model
             model.build()
             sess.run(tf.global_variables_initializer())
-            ## Load the Pre-trained CNN file
-            model.encoder.cnn.load_cnn(sess, config.CNN_PRETRAINED_FILE)
 
             model.load(sess, config.MODEL_FILE_NAME)
+            ## Load the Pre-trained CNN file
+            model.encoder.cnn.load_cnn(sess, config.CNN_PRETRAINED_FILE)
             model.test(sess,data_set,top_answers)
 
 

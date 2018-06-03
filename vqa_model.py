@@ -19,6 +19,7 @@ class vqa_model:
         self.decoder = vqa_decoder(self.config)
         self.image_loader = ImageLoader( './ilsvrc_2012_mean.npy',self.config)
         self.image_feature_loader = image_feature_loader(self.config)
+        self.image_feature_loader_eval = image_feature_loader_eval(self.config)
         self.global_step = 0
 
     def build(self):
@@ -58,13 +59,14 @@ class vqa_model:
         ## pass the outputs of encoder to decoder model
         self.decoder.build(self.encoder.cnn_features,self.encoder.lstm_features)
         self.image_feature_loader.build()
+        self.image_feature_loader_eval.build()
         self.build_model()
 
     def build_model(self):
         ## Assign variables that needs to be passed to variables from encoder and decoder
         pass
 
-    def train(self,sess,train_data):
+    def train(self,sess,train_data,eval_data):
         print("Training the model")
 
         epoch_count = self.config.EPOCH_COUNT
@@ -108,11 +110,48 @@ class vqa_model:
             f.close()
             train_data.reset()
 
+            if(self.config.EVALUATION_PRESENT and (epoch_count % 2 == 0)):
+                self.eval(sess,eval_data)
+
+
+    def eval(self,sess,eval_data):
+        print("Evaluating the model")
+        total_predictions_correct = 0
+        for _ in tqdm(list(range(eval_data.num_batches)), desc='batch'):
+            # for _ in tqdm(list(range(self.config.NUM_BATCHES)), desc='batch'):
+            batch = eval_data.next_batch()
+            image_files, image_idxs, question_idxs, question_masks, answer_idxs, answer_masks = batch
+            # images = self.image_loader.load_images(image_files)
+            image_features = self.image_feature_loader_eval.load_images(image_idxs)
+
+            feed_dict = {self.image_features: image_features,
+                         # self.images:images,
+                         self.questions: question_idxs,
+                         self.question_masks: question_masks,
+                         self.decoder.answers: answer_idxs,
+                         self.decoder.answer_masks: answer_masks}
+
+            predictions_correct = sess.run(self.decoder.predictions_correct,
+                                              feed_dict=feed_dict)
+
+            total_predictions_correct += predictions_correct
+
+
+
+        print("Total Predictions correct : {0} in Validation".format(total_predictions_correct))
+        f = open("results.txt", 'a')
+        f.write("------------------------------------------------------------------------------\n")
+        f.write("Total Predictions correct : {0} in Validation\n".format(total_predictions_correct))
+        f.write("------------------------------------------------------------------------------\n")
+        f.close()
+        eval_data.reset()
+
+
 
     def test(self,sess,test_data,top_answers):
 
-        batch = test_data.batch()
-        image_files, question_idxs, question_masks = batch
+        batch = test_data.next_batch()
+        image_files, image_idxs, question_idxs, question_masks = batch
         images = self.image_loader.load_images(image_files)
 
         feed_dict = {self.images: images,
@@ -120,8 +159,16 @@ class vqa_model:
                      self.question_masks: question_masks
                      }
 
-        predictions = sess.run(self.decoder.predictions,feed_dict = feed_dict)
-        print("Answer is {}".format(top_answers[predictions]))
+        predictions,logits = sess.run([self.decoder.predictions,self.decoder.softmax_logits],feed_dict = feed_dict)
+
+        ## Get top 5 elements
+        logits = np.array(logits[0]) ## logits obtained are two dimensional array
+        idxs = sorted(range(len(logits)), key=lambda i: logits[i], reverse=True)[:5]
+
+        print("Answers ......")
+        for i in range(5):
+            print("Answer : {0:10} probability : {1:10}".format(top_answers[idxs[i]] ,logits[idxs[i]]))
+        print(top_answers[int(predictions)])
 
     def save(self,file_name):
         """ Save the model. """

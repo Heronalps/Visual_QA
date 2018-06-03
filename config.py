@@ -1,15 +1,18 @@
 class Config(object):
     def __init__(self):
         ## Questions and Annotataions JSON files
-        self.DATA_DIR ='./datasets/'
+        # self.DATA_DIR ='./datasets/'
+        self.DATA_DIR = '/Users/sainikhilmaram/Desktop/datasets/'
+
         self.TRAIN_QUESTIONS_FILE='v2_OpenEnded_mscoco_train2014_questions.json'
         self.TRAIN_ANNOTATIONS_FILE='v2_mscoco_train2014_annotations.json'
         self.TRAIN_IMAGE_DIR = self.DATA_DIR + '/train2014/'
-        #self.TRAIN_IMAGE_DIR = '/Users/sainikhilmaram/Desktop/train2014'
+        self.EVAL_IMAGE_DIR = self.DATA_DIR + '/val2014/'
 
 
-        self.VAL_QUESTIONS_FILE='v2_OpenEnded_mscoco_val2014_questions.json'
-        self.VAL_ANNOTATIONS_FILE='v2_mscoco_val2014_annotations.json'
+
+        self.EVAL_QUESTIONS_FILE='v2_OpenEnded_mscoco_val2014_questions.json'
+        self.EVAL_ANNOTATIONS_FILE='v2_mscoco_val2014_annotations.json'
 
         self.GLOVE_EMBEDDING_FILE='./datasets/glove.6B.100d.txt'
 
@@ -23,8 +26,11 @@ class Config(object):
         self.IMAGE_SHAPE = self.IMAGE_DIMENSION + [3]
         self.IMAGE_FEATURES = 14
         self.IMAGE_FEATURES_MAP = 4096
-        self.CONV_DATA_SET = 'conv_dict.npy'
-        self.FC_DATA_SET = 'fc2_dict.npy'
+        self.CONV_DATA_SET_TRAIN = 'conv_dict_train.npy'
+        self.FC_DATA_SET_TRAIN = 'fc2_dict_train.npy'
+
+        self.CONV_DATA_SET_EVAL = 'conv_dict_eval.npy'
+        self.FC_DATA_SET_EVAL = 'fc2_dict_eval.npy'
 
         # self.CNN = 'resnet50'
         # self.CNN_PRETRAINED_FILE = './resnet50_no_fc.npy'
@@ -45,7 +51,9 @@ class Config(object):
 
         ## Model Parameters
         # self.PHASE = 'cnn_features'
-        self.PHASE = 'train'
+        # self.PHASE = 'train'
+        self.PHASE = 'test'
+        self.EVALUATION_PRESENT = True
         self.POINT_WISE_FEATURES = 1024
         self.INTERMEDIATE_DIMENSION = 30
 
@@ -56,8 +64,8 @@ class Config(object):
         self.SAVE_DIR = './models/'
         self.SAVE_PERIOD = 370000/(self.BATCH_SIZE*4)
         self.LOAD_MODEL = True
-        self.MODEL_FILE_NAME= self.SAVE_DIR + '/epoch_5.npy'
-        self.EPOCH_COUNT = 5
+        self.MODEL_FILE_NAME= self.SAVE_DIR + '/epoch_34.npy'
+        self.EPOCH_COUNT = 20
 
 
         ## Testing Parameters
