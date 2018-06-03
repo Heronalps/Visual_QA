@@ -2,7 +2,7 @@ class Config(object):
     def __init__(self):
         ## Questions and Annotataions JSON files
         # self.DATA_DIR ='./datasets/'
-        self.DATA_DIR = '/Users/sainikhilmaram/Desktop/datasets/'
+        self.DATA_DIR = '/Users/michaelzhang/Downloads/Visual_QA/datasets/'
 
         self.TRAIN_QUESTIONS_FILE='v2_OpenEnded_mscoco_train2014_questions.json'
         self.TRAIN_ANNOTATIONS_FILE='v2_mscoco_train2014_annotations.json'
@@ -61,7 +61,7 @@ class Config(object):
         self.INITIAL_LEARNING_RATE = 1e-4
         self.NUM_EPOCHS = 15
         self.NUM_BATCHES = 2 ## Just a place holder, so it doesn't loop through all the data.
-        self.SAVE_DIR = './models/'
+        self.SAVE_DIR = './models'
         self.SAVE_PERIOD = 370000/(self.BATCH_SIZE*4)
         self.LOAD_MODEL = True
         self.MODEL_FILE_NAME= self.SAVE_DIR + '/epoch_34.npy'

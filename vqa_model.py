@@ -58,8 +58,9 @@ class vqa_model:
 
         ## pass the outputs of encoder to decoder model
         self.decoder.build(self.encoder.cnn_features,self.encoder.lstm_features)
-        self.image_feature_loader.build()
-        self.image_feature_loader_eval.build()
+        if self.config.PHASE == "train":
+            self.image_feature_loader.build()
+            self.image_feature_loader_eval.build()
         self.build_model()
 
     def build_model(self):
