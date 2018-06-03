@@ -9,6 +9,7 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import re
+import json
 
 NEG_CONTRACTIONS = [
     (r'aren\'t', 'are not'),
@@ -59,23 +60,47 @@ def tokenizing_sentence(line):
 
 
 class Vocabulary(object):
-    def __init__(self, words, word2idx):
-        self.words = words
-        self.word2idx = word2idx
+    def __init__(self,config):
+        print("Created Vocabulary Object")
         self.missingWords = 0
         nltk.download('stopwords')
         nltk.download('punkt')
+        self.config  = config
+        self.words = []
+        self.word2idx = {}
+
+    def build(self,questions_json_file):
+        print("Building the indexes")
+        word_counts = {}
+        train_ques = json.load(open(questions_json_file, 'r'))
+        train_size = len(train_ques['questions'])
+
+        for i in tqdm(list(range(train_size)), desc='sentences'):
+            question = train_ques['questions'][i]['question']
+            for w in tokenizing_sentence(question.lower()):
+                word_counts[w] = word_counts.get(w, 0) + 1.0
+
+        word_counts = sorted(list(word_counts.items()),
+                             key=lambda x: x[1],
+                             reverse=True)
+
+        self.num_words = len(word_counts)
+        self.config.VOCAB_SIZE = self.num_words
+
+        for idx in range(self.num_words):
+            word, word_count = word_counts[idx]
+            self.word2idx[word] = idx
+            self.words.append(word)
+
+
+        print("Total number of different words in question {}".format(len(word_counts)))
+
 
     def process_sentence(self, sentence):
         """ Tokenize a sentence, and translate each token into its index
             in the vocabulary. """
         words = tokenizing_sentence(sentence.lower())
-        try:
-
-            word_idxs = [int(self.word2idx[w]) for w in words]
-        except:
-            self.missingWords = self.missingWords + 1
-            word_idxs = []
+        word_idxs = [int(self.word2idx[w]) for w in words]
         return word_idxs
 
     def get_sentence(self, idxs):
@@ -89,5 +114,22 @@ class Vocabulary(object):
                             and w not in string.punctuation \
                             else w for w in words]).strip()
         return sentence
+
+    def save_file(self):
+        """ Save the vocabulary to a file. """
+        print("Saving the Vocabulary File ...")
+        data = pd.DataFrame({'word': self.words,
+                             'index': list(range(self.num_words))
+                             })
+        data.to_csv(self.config.DATA_DIR + self.config.VOCABULARY_FILE)
+
+    def load(self, save_file):
+        """ Load the vocabulary from a file. """
+        print("Loading the Vocabulary File .....")
+        assert os.path.exists(save_file)
+        data = pd.read_csv(save_file)
+        self.words = data['word'].values
+        self.word2idx = {self.words[i]:i for i in range(self.config.VOCAB_SIZE)}
+
 
 

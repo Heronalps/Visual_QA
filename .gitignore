@@ -4,3 +4,5 @@ datasets/
 __pycach*
 datasets/.DS_Store
 laska.png
+models/
+*.txt
